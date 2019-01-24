@@ -1,67 +1,118 @@
 package com.eduardodev.kataloginlogout
 
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.then
 import com.nhaarman.mockitokotlin2.whenever
-import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 
-@RunWith(MockitoJUnitRunner::class)
+private const val ANY_USER_NAME = "any user name"
+private const val ANY_PASSWORD = "any password"
+
+@RunWith(MockitoJUnitRunner.Silent::class)
 class LoginPresenterTest {
 
-    private data class LoginTestInput(val userName: String, val password: String)
-    private data class LoginTestCase(val input: LoginTestInput, val expectedOutput: Boolean)
+    @Mock
+    private lateinit var view: LoginView
 
     @Mock
-    private lateinit var timeProvider: TimeProvider
-
-    private val loginTestCases = listOf(
-        LoginTestCase(LoginTestInput("not admin", "admin"), false),
-        LoginTestCase(LoginTestInput("admin", "not admin"), false),
-        LoginTestCase(LoginTestInput("not admin", "not admin"), false),
-        LoginTestCase(LoginTestInput("admin", "admin"), true)
-    )
+    private lateinit var validator: LoginValidator
 
     @Test
-    fun `should login correctly`() {
-        val presenter = LoginPresenter(timeProvider)
+    fun `should call validator when logging in`() {
+        val validator = givenAValidator()
+        val view = givenAView(ANY_USER_NAME, ANY_PASSWORD)
+        val presenter = givenAPresenter(view, validator)
 
-        loginTestCases.forEach {
-            with(it.input) {
-                assertEquals(it.expectedOutput, presenter.canLogIn(userName, password))
-            }
-        }
+        presenter.logIn()
+
+        then(validator).should().canLogIn(ANY_USER_NAME, ANY_PASSWORD)
     }
 
     @Test
-    fun `should return true when logout with even ms`() {
-        givenEvenMs()
-        val presenter = LoginPresenter(timeProvider)
+    fun `should call show logout form if can log in`() {
+        val validator = givenAValidator(canLogIn = true)
+        val view = givenAView(ANY_USER_NAME, ANY_PASSWORD)
+        val presenter = givenAPresenter(view, validator)
 
-        val result = presenter.canLogout()
+        presenter.logIn()
 
-        assertTrue(result)
+        then(view).should().showLogoutForm()
     }
 
     @Test
-    fun `should return false when logout with odd ms`() {
-        givenOddMs()
-        val presenter = LoginPresenter(timeProvider)
+    fun `should call hide login form if can log in`() {
+        val validator = givenAValidator(canLogIn = true)
+        val view = givenAView(ANY_USER_NAME, ANY_PASSWORD)
+        val presenter = givenAPresenter(view, validator)
 
-        val result = presenter.canLogout()
+        presenter.logIn()
 
-        assertFalse(result)
+        then(view).should().hideLoginForm()
     }
 
-    private fun givenEvenMs(): TimeProvider {
-        doReturn(2L).whenever(timeProvider).currentTimeInMs()
-        return timeProvider
+    @Test
+    fun `should call show error if cannot log in`() {
+        val validator = givenAValidator(canLogIn = false)
+        val view = givenAView(ANY_USER_NAME, ANY_PASSWORD)
+        val presenter = givenAPresenter(view, validator)
+
+        presenter.logIn()
+
+        then(view).should().showError()
     }
 
-    private fun givenOddMs(): TimeProvider {
-        doReturn(3L).whenever(timeProvider).currentTimeInMs()
-        return timeProvider
+    @Test
+    fun `should call show login form if can log out`() {
+        val validator = givenAValidator(canLogOut = true)
+        val view = givenAView(ANY_USER_NAME, ANY_PASSWORD)
+        val presenter = givenAPresenter(view, validator)
+
+        presenter.logOut()
+
+        then(view).should().showLoginForm()
+    }
+
+    @Test
+    fun `should call hide logout form if can log out`() {
+        val validator = givenAValidator(canLogOut = true)
+        val view = givenAView(ANY_USER_NAME, ANY_PASSWORD)
+        val presenter = givenAPresenter(view, validator)
+
+        presenter.logOut()
+
+        then(view).should().hideLogoutForm()
+    }
+
+    @Test
+    fun `should call show error form if cannot log out`() {
+        val validator = givenAValidator(canLogOut = false)
+        val view = givenAView(ANY_USER_NAME, ANY_PASSWORD)
+        val presenter = givenAPresenter(view, validator)
+
+        presenter.logOut()
+
+        then(view).should().showError()
+    }
+
+    private fun givenAPresenter(view: LoginView, validator: LoginValidator) =
+        LoginPresenter(view, validator)
+
+    private fun givenAView(userName: String, password: String): LoginView {
+        doReturn(userName).whenever(view).userName
+        doReturn(password).whenever(view).password
+        return view
+    }
+
+    private fun givenAValidator(
+        canLogIn: Boolean = true,
+        canLogOut: Boolean = true
+    ): LoginValidator {
+        doReturn(canLogIn).whenever(validator).canLogIn(any(), any())
+        doReturn(canLogOut).whenever(validator).canLogout()
+        return validator
     }
 }

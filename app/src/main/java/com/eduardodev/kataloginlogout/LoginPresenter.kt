@@ -1,9 +1,33 @@
 package com.eduardodev.kataloginlogout
 
-class LoginPresenter(private val timeProvider: TimeProvider) {
+import org.jetbrains.anko.doAsync
 
-    fun canLogIn(userName: String, password: String) =
-        userName == "admin" && password == "admin"
+class LoginPresenter(
+    private val view: LoginView,
+    private val validator: LoginValidator = LoginValidator()
+) {
 
-    fun canLogout() = timeProvider.currentTimeInMs() % 2 == 0L
+    fun logIn() {
+//        doAsync {
+//            Thread.sleep(3000)
+            if (validator.canLogIn(view.userName, view.password)) {
+                view.showLogoutForm()
+                view.hideLoginForm()
+            } else {
+                view.showError()
+            }
+//        }
+    }
+
+    fun logOut() {
+//        doAsync {
+//            Thread.sleep(3000)
+            if (validator.canLogout()) {
+                view.showLoginForm()
+                view.hideLogoutForm()
+            } else {
+                view.showError()
+            }
+//        }
+    }
 }

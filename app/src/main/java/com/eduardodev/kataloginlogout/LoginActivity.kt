@@ -9,9 +9,15 @@ import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_login.*
 
 
-class LoginActivity : AppCompatActivity() {
+class LoginActivity : AppCompatActivity(), LoginView {
 
-    private val presenter = LoginPresenter(TimeProvider())
+    private val presenter = LoginPresenter(this)
+
+    override val userName: String
+        get() = userNameView.text.toString()
+
+    override val password: String
+        get() = passwordView.text.toString()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,32 +26,39 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setupButtonListeners() {
-        loginButton.setOnClickListener { checkAndLogin() }
-        logoutButton.setOnClickListener { checkAndLogout() }
+        loginButton.setOnClickListener { presenter.logIn() }
+        logoutButton.setOnClickListener { presenter.logOut() }
     }
 
-    private fun checkAndLogin() {
-        val userNameText = userName.text.toString()
-        val passwordText = password.text.toString()
-
-        if (presenter.canLogIn(userNameText, passwordText)) {
-            clearFields()
-            hideKeyboard()
-            showLogout()
-        } else {
-            showError()
-        }
+    override fun hideLoginForm() {
+        userNameView.setVisible(false)
+        passwordView.setVisible(false)
+        loginButton.setVisible(false)
     }
 
-    private fun checkAndLogout() {
-        if (presenter.canLogout()) {
-            showLogin()
-        }
+    override fun hideLogoutForm() {
+        logoutButton.setVisible(false)
+    }
+
+    override fun showLoginForm() {
+        userNameView.setVisible(true)
+        passwordView.setVisible(true)
+        loginButton.setVisible(true)
+    }
+
+    override fun showLogoutForm() {
+        clearFields()
+        hideKeyboard()
+        logoutButton.setVisible(true)
+    }
+
+    override fun showError() {
+        Toast.makeText(this, "ERROR", Toast.LENGTH_LONG).show()
     }
 
     private fun clearFields() {
-        userName.text?.clear()
-        password.text?.clear()
+        userNameView.text?.clear()
+        passwordView.text?.clear()
     }
 
     private fun hideKeyboard() {
@@ -54,25 +67,7 @@ class LoginActivity : AppCompatActivity() {
         inputMethodService.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-    private fun showLogout() {
-        userName.setVisible(false)
-        password.setVisible(false)
-        loginButton.setVisible(false)
-        logoutButton.setVisible(true)
-    }
-
-    private fun showLogin() {
-        userName.setVisible(true)
-        password.setVisible(true)
-        loginButton.setVisible(true)
-        logoutButton.setVisible(false)
-    }
-
     private fun View.setVisible(isVisible: Boolean) {
         visibility = if (isVisible) View.VISIBLE else View.GONE
-    }
-
-    private fun showError() {
-        Toast.makeText(this, "ERROR", Toast.LENGTH_LONG).show()
     }
 }
