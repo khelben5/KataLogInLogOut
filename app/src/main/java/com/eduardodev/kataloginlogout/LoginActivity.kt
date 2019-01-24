@@ -11,6 +11,8 @@ import kotlinx.android.synthetic.main.activity_login.*
 
 class LoginActivity : AppCompatActivity() {
 
+    private val presenter = LoginPresenter(TimeProvider())
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
@@ -26,7 +28,7 @@ class LoginActivity : AppCompatActivity() {
         val userNameText = userName.text.toString()
         val passwordText = password.text.toString()
 
-        if (LoginPresenter().canLogIn(userNameText, passwordText)) {
+        if (presenter.canLogIn(userNameText, passwordText)) {
             clearFields()
             hideKeyboard()
             showLogout()
@@ -36,7 +38,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun checkAndLogout() {
-        if (System.currentTimeMillis() % 2 == 0L) {
+        if (presenter.canLogout()) {
             showLogin()
         }
     }
