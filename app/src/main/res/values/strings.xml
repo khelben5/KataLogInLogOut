@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">KataLogInLogOut</string>
     <string name="login_button">Login</string>
+    <string name="logout_button">Logout</string>
 </resources>
