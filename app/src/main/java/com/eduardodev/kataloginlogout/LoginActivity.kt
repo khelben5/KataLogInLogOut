@@ -18,23 +18,26 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setupButtonListeners() {
-        loginButton.setOnClickListener { checkForm() }
-        logoutButton.setOnClickListener { showLogin() }
+        loginButton.setOnClickListener { checkAndLogin() }
+        logoutButton.setOnClickListener { checkAndLogout() }
     }
 
-    private fun checkForm() {
+    private fun checkAndLogin() {
         val userNameText = userName.text.toString()
         val passwordText = password.text.toString()
 
-        if (userNameText == "admin"
-            && passwordText == "admin"
-            && System.currentTimeMillis() % 2 == 0L
-        ) {
+        if (LoginPresenter().canLogIn(userNameText, passwordText)) {
             clearFields()
             hideKeyboard()
             showLogout()
         } else {
             showError()
+        }
+    }
+
+    private fun checkAndLogout() {
+        if (System.currentTimeMillis() % 2 == 0L) {
+            showLogin()
         }
     }
 
